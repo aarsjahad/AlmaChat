@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
@@ -10,26 +10,54 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Fix Python File Name
+      run: |
+        if [ -f "Main.py" ]; then mv Main.py main.py; fi
+
+    - name: Create buildozer.spec automatically
+      run: |
+        cat <<EOF > buildozer.spec
+        [app]
+        title = AlmaChat
+        package.name = almachat
+        package.domain = org.almax
+        source.dir = .
+        source.include_exts = py,png,jpg,kv,atlas
+        version = 0.1
+        # Yahan hum Kivy ka 'master' version use kar rahe hain jo Python 3.14 ko support karta hai
+        requirements = python3,kivy==master,requests,plyer
+        orientation = portrait
+        osx.kivy_version = 2.2.0
+        fullscreen = 0
+        android.api = 33
+        android.minapi = 24
+        android.ndk = 25b
+        android.archs = arm64-v8a, armeabi-v7a
+        android.allow_backup = True
+        p4a.branch = master
+        [buildozer]
+        log_level = 2
+        warn_on_root = 1
+        EOF
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install System Dependencies
+    - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-
-    - name: Install Buildozer and Cython
-      run: |
-        pip install Cython==0.29.33
-        pip install buildozer
+        sudo apt update
+        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+        # Yahan hum latest Cython install kar rahe hain
+        pip install Cython buildozer
 
     - name: Build APK
       run: |
-        yes | buildozer android debug
+        yes | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
