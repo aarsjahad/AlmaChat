@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout code
@@ -17,7 +17,7 @@ jobs:
       run: |
         if [ -f "Main.py" ]; then mv Main.py main.py; fi
 
-    - name: Create buildozer.spec automatically
+    - name: Create Clean buildozer.spec
       run: |
         cat <<EOF > buildozer.spec
         [app]
@@ -27,8 +27,7 @@ jobs:
         source.dir = .
         source.include_exts = py,png,jpg,kv,atlas
         version = 0.1
-        # Yahan hum Kivy ka 'master' version use kar rahe hain jo Python 3.14 ko support karta hai
-        requirements = python3,kivy==master,requests,plyer
+        requirements = python3,kivy==2.3.0,requests,plyer
         orientation = portrait
         osx.kivy_version = 2.2.0
         fullscreen = 0
@@ -37,7 +36,6 @@ jobs:
         android.ndk = 25b
         android.archs = arm64-v8a, armeabi-v7a
         android.allow_backup = True
-        p4a.branch = master
         [buildozer]
         log_level = 2
         warn_on_root = 1
@@ -52,8 +50,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-        # Yahan hum latest Cython install kar rahe hain
-        pip install Cython buildozer
+        pip install Cython==0.29.33 buildozer virtualenv
 
     - name: Build APK
       run: |
